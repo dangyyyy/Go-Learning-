@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
+	"os"
 	"time"
 )
 
@@ -32,16 +34,38 @@ func (u User) GetAction() string {
 	return out
 }
 func main() {
-	u := User{
-		id:    1,
-		email: "john@gmail.com",
-		logs: []logItem{
-			{actions[0], time.Now()},
-			{actions[1], time.Now()},
-			{actions[2], time.Now()},
-			{actions[3], time.Now()},
-			{actions[4], time.Now()},
-		},
+	users := GenerateUsers(1000)
+	for _, user := range users {
+		SaveUserInfo(user)
+
 	}
-	fmt.Println(u.GetAction())
+}
+
+func GenerateUsers(count int) []User {
+	users := make([]User, count)
+	for i := 0; i < count; i++ {
+		users[i] = User{
+			id:    i + 1,
+			email: fmt.Sprintf("user%d@gmail.com", i+1),
+			logs:  generateLogs(rand.Intn(1000)),
+		}
+	}
+	return users
+}
+func generateLogs(count int) []logItem {
+	logs := make([]logItem, count)
+	for i := 0; i < count; i++ {
+		logs[i] = logItem{actions[rand.Intn(len(actions)-1)], time.Now()}
+	}
+	return logs
+}
+func SaveUserInfo(user User) error {
+	fmt.Printf("Saving user info: %d\n", user.id)
+	filename := fmt.Sprintf("logs/user%d.txt", user.id)
+	file, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0644)
+	if err != nil {
+		return err
+	}
+	_, err = file.WriteString(user.GetAction())
+	return err
 }
