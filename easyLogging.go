@@ -37,9 +37,10 @@ func (u User) GetAction() string {
 func main() {
 	t := time.Now()
 	wg := &sync.WaitGroup{}
-	users := GenerateUsers(10000)
+	users := make(chan User)
+	go GenerateUsers(1000, users)
 
-	for _, user := range users {
+	for user := range users {
 		wg.Add(1)
 		go SaveUserInfo(user, wg)
 
@@ -48,16 +49,16 @@ func main() {
 	fmt.Println("Time elapsed: ", time.Since(t).String())
 }
 
-func GenerateUsers(count int) []User {
-	users := make([]User, count)
+func GenerateUsers(count int, users chan User) {
+
 	for i := 0; i < count; i++ {
-		users[i] = User{
+		users <- User{
 			id:    i + 1,
 			email: fmt.Sprintf("user%d@gmail.com", i+1),
 			logs:  generateLogs(rand.Intn(1000)),
 		}
 	}
-	return users
+	close(users)
 }
 func generateLogs(count int) []logItem {
 	logs := make([]logItem, count)
